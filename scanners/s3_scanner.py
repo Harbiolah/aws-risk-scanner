@@ -94,7 +94,9 @@ if __name__ == "__main__":
         print(f"Risk Score    : {finding.risk_score()}")
         print(f"Description   : {finding.description}")
 
-    save_findings_to_json(findings)
-    save_findings_to_csv(findings)
-
-    print("\nReports saved successfully to outputs/findings.json and outputs/findings.csv")
+    if findings:
+        save_findings_to_json(findings)
+        save_findings_to_csv(findings)
+        print("\nReports saved successfully to outputs/findings.json and outputs/findings.csv")
+    else:
+        print("\nNo findings were generated, so reports were not overwritten.")
