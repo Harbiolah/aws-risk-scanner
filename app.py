@@ -1,8 +1,10 @@
 from scanners.s3_scanner import S3Scanner
 from scanners.ec2_scanner import EC2Scanner
+from scanners.iam_scanner import IAMScanner
 from rules.s3_rules import generate_s3_findings
 from engine.report_generator import save_findings_to_json, save_findings_to_csv
 from engine.risk_engine import summarize_findings
+
 
 def main():
     all_findings = []
@@ -16,6 +18,10 @@ def main():
     ec2_findings = ec2_scanner.scan_security_groups()
     all_findings.extend(ec2_findings)
 
+    iam_scanner = IAMScanner()
+    iam_findings = iam_scanner.scan_users()
+    all_findings.extend(iam_findings)
+
     summary = summarize_findings(all_findings)
 
     print("AWS Misconfiguration Scan Results")
@@ -27,6 +33,10 @@ def main():
 
     print("\nEC2 Findings:")
     for finding in ec2_findings:
+        print(f"- {finding.rule_id}: {finding.title} ({finding.resource_id})")
+
+    print("\nIAM Findings:")
+    for finding in iam_findings:
         print(f"- {finding.rule_id}: {finding.title} ({finding.resource_id})")
 
     if all_findings:
