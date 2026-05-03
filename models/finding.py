@@ -16,12 +16,16 @@ class Finding:
     asset_sensitivity: int
 
     def risk_score(self) -> float:
+        from engine.context_evaluator import evaluate_context
+
+        impact, likelihood, exposure, asset_sensitivity = evaluate_context(self)
+
         w1, w2, w3, w4 = 0.35, 0.25, 0.20, 0.20
         score = (
-            self.impact * w1
-            + self.likelihood * w2
-            + self.exposure * w3
-            + self.asset_sensitivity * w4
+            impact * w1
+            + likelihood * w2
+            + exposure * w3
+            + asset_sensitivity * w4
         )
         return round(score, 2)
 
