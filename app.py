@@ -1,6 +1,7 @@
 from scanners.s3_scanner import S3Scanner
 from scanners.ec2_scanner import EC2Scanner
 from scanners.iam_scanner import IAMScanner
+from scanners.cloudtrail_scanner import CloudTrailScanner
 
 from rules.s3_rules import generate_s3_findings
 
@@ -28,6 +29,11 @@ def main():
     iam_findings = iam_scanner.scan_users()
     all_findings.extend(iam_findings)
 
+    # CloudTrail Scan
+    cloudtrail_scanner = CloudTrailScanner()
+    cloudtrail_findings = cloudtrail_scanner.scan_trails()
+    all_findings.extend(cloudtrail_findings)
+
     # Summary
     summary = summarize_findings(all_findings)
 
@@ -37,7 +43,6 @@ def main():
     print("AWS Misconfiguration Scan Results")
     print("=" * 40)
 
-    # S3 Findings
     print("\nS3 Findings:")
     if s3_findings:
         for finding in s3_findings:
@@ -45,7 +50,6 @@ def main():
     else:
         print("- No S3 findings detected")
 
-    # EC2 Findings
     print("\nEC2 Findings:")
     if ec2_findings:
         for finding in ec2_findings:
@@ -53,7 +57,6 @@ def main():
     else:
         print("- No EC2 findings detected")
 
-    # IAM Findings
     print("\nIAM Findings:")
     if iam_findings:
         for finding in iam_findings:
@@ -61,7 +64,13 @@ def main():
     else:
         print("- No IAM findings detected")
 
-    # Correlated Risks
+    print("\nCloudTrail Findings:")
+    if cloudtrail_findings:
+        for finding in cloudtrail_findings:
+            print(f"- {finding.rule_id}: {finding.title} ({finding.resource_id}) [{finding.region}]")
+    else:
+        print("- No CloudTrail findings detected")
+
     print("\nCorrelated Risks:")
     if correlated_risks:
         for risk in correlated_risks:
@@ -69,7 +78,6 @@ def main():
     else:
         print("- No correlated risks detected")
 
-    # Save Reports
     if all_findings:
         save_findings_to_json(all_findings, "outputs/all_findings.json")
         save_findings_to_csv(all_findings, "outputs/all_findings.csv")
@@ -77,7 +85,6 @@ def main():
     else:
         print("\nNo findings generated.")
 
-    # Summary Output
     print("\nSummary:")
     print(f"Total Findings      : {summary['total_findings']}")
     print(f"High Severity       : {summary['high']}")
