@@ -14,6 +14,7 @@ class Finding:
     likelihood: int
     exposure: int
     asset_sensitivity: int
+    region: str = "global"
 
     def risk_score(self) -> float:
         from engine.context_evaluator import evaluate_context
