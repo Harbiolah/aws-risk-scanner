@@ -8,6 +8,7 @@ from rules.s3_rules import generate_s3_findings
 from engine.report_generator import save_findings_to_json, save_findings_to_csv
 from engine.risk_engine import summarize_findings
 from engine.correlator import correlate_findings
+from scanners.rds_scanner import RDSScanner
 
 
 def main():
@@ -33,6 +34,11 @@ def main():
     cloudtrail_scanner = CloudTrailScanner()
     cloudtrail_findings = cloudtrail_scanner.scan_trails()
     all_findings.extend(cloudtrail_findings)
+    
+    # RDS Scan
+    rds_scanner = RDSScanner()
+    rds_findings = rds_scanner.scan_databases()
+    all_findings.extend(rds_findings)
 
     # Summary
     summary = summarize_findings(all_findings)
@@ -70,6 +76,13 @@ def main():
             print(f"- {finding.rule_id}: {finding.title} ({finding.resource_id}) [{finding.region}]")
     else:
         print("- No CloudTrail findings detected")
+
+    print("\nRDS Findings:")
+    if rds_findings:
+        for finding in rds_findings:
+            print(f"- {finding.rule_id}: {finding.title} ({finding.resource_id}) [{finding.region}]")
+    else:
+        print("- No RDS findings detected")
 
     print("\nCorrelated Risks:")
     if correlated_risks:
