@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AWS Risk Scanner Dashboard</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+
+<h1>AWS Misconfiguration Detection and Risk Scoring Dashboard</h1>
+
+<section class="cards">
+
+    <div class="card">
+        <h3>Total Findings</h3>
+        <p>{{ summary.get("total_findings", 0) }}</p>
+    </div>
+
+    <div class="card">
+        <h3>Critical</h3>
+        <p>{{ summary.get("critical", 0) }}</p>
+    </div>
+
+    <div class="card">
+        <h3>High</h3>
+        <p>{{ summary.get("high", 0) }}</p>
+    </div>
+
+    <div class="card">
+        <h3>Medium</h3>
+        <p>{{ summary.get("medium", 0) }}</p>
+    </div>
+
+</section>
+
+<h2>Severity Distribution</h2>
+
+<div class="chart-container">
+    <canvas id="severityChart"></canvas>
+</div>
+
+<h2>Scan Metadata</h2>
+
+<table>
+    {% for key, value in metadata.items() %}
+    <tr>
+        <th>{{ key }}</th>
+        <td>{{ value }}</td>
+    </tr>
+    {% endfor %}
+</table>
+
+<h2>Correlated Risks</h2>
+
+{% if correlated_risks %}
+<ul>
+    {% for risk in correlated_risks %}
+    <li>{{ risk }}</li>
+    {% endfor %}
+</ul>
+{% else %}
+<p>No correlated risks detected.</p>
+{% endif %}
+
+<h2>Security Findings</h2>
+
+<input
+    type="text"
+    id="searchInput"
+    placeholder="Search findings by rule ID, resource, title, severity..."
+    onkeyup="filterFindings()"
+>
+
+<table id="findingsTable">
+
+    <tr>
+        <th>Rule ID</th>
+        <th>Resource</th>
+        <th>Service</th>
+        <th>Region</th>
+        <th>Title</th>
+        <th>Severity</th>
+        <th>Risk Score</th>
+    </tr>
+
+    {% for finding in findings %}
+    <tr>
+
+        <td>{{ finding.get("rule_id") }}</td>
+
+        <td>{{ finding.get("resource_id") }}</td>
+
+        <td>{{ finding.get("resource_type") }}</td>
+
+        <td>{{ finding.get("region", "global") }}</td>
+
+        <td>{{ finding.get("title") }}</td>
+
+        <td>
+            <span class="severity {{ finding.get('severity', '').lower() }}">
+                {{ finding.get("severity") }}
+            </span>
+        </td>
+
+        <td>{{ finding.get("risk_score") }}</td>
+
+    </tr>
+    {% endfor %}
+
+</table>
+
+<script>
+
+    const severityData = {
+        labels: ["Critical", "High", "Medium", "Low"],
+
+        datasets: [{
+            label: "Findings by Severity",
+
+            data: [
+                {{ summary.get("critical", 0) }},
+                {{ summary.get("high", 0) }},
+                {{ summary.get("medium", 0) }},
+                {{ summary.get("low", 0) }}
+            ],
+
+            backgroundColor: [
+                "#dc2626",
+                "#f97316",
+                "#facc15",
+                "#22c55e"
+            ],
+
+            borderColor: "#0f172a",
+            borderWidth: 2
+        }]
+    };
+
+    new Chart(document.getElementById("severityChart"), {
+
+        type: "doughnut",
+
+        data: severityData,
+
+        options: {
+            responsive: true,
+
+            plugins: {
+                legend: {
+                    labels: {
+                        color: "#e5e7eb"
+                    }
+                }
+            }
+        }
+    });
+
+    function filterFindings() {
+        let input = document.getElementById("searchInput");
+        let filter = input.value.toLowerCase();
+        let table = document.getElementById("findingsTable");
+        let rows = table.getElementsByTagName("tr");
+
+        for (let i = 1; i < rows.length; i++) {
+            let rowText = rows[i].innerText.toLowerCase();
+
+            if (rowText.includes(filter)) {
+                rows[i].style.display = "";
+            } else {
+                rows[i].style.display = "none";
+            }
+        }
+    }
+
+</script>
+
+</body>
+</html>
